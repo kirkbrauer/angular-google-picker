@@ -238,6 +238,41 @@ angular.module('myApp', ['lk-google-picker'])
 <a href="javascript:;" lk-google-picker on-cancel="onCancel">Open my Google Drive</a>
 ```
 
+#Extra options
+
+##Use your own access token
+
+If your app already has already authenticated or has an access token, you can use it by adding the developer key from your Google console and by adding the access-token directive to the link.
+
+You can obtain the developer key by going to https://console.developers.google.com/apis/credentials and clicking Create Credentials > API Key > Browser Key and then adding your domain to the accepted domains.
+
+```js
+angular.module('myApp', ['lk-google-picker'])
+
+.config(['lkGoogleSettingsProvider', function (lkGoogleSettingsProvider) {
+
+  lkGoogleSettingsProvider.configure({
+    apiKey       : 'YOUR_API_KEY',
+    clientId     : 'YOUR_CLIENT_ID', //<<< The Key you obtained from the console
+    developerKey : 'YOUR_DEVELOPER_KEY',
+    scopes       : ['https://www.googleapis.com/auth/drive', 'another_scope', 'and_another'],
+    locale       : 'ja',
+    features     : ['..', '..'],
+    views        : ['..', '..']
+  });
+}])
+
+//Example Controller Code
+.controller('appCtrl', function($scope) {
+  $scope.accessToken = "YOUR_TOKEN";
+});
+```
+Then, you can add the access token to your link
+
+```html
+<a href="javascript:;" lk-google-picker access-token="{{accessToken}}">Open my Google Drive</a>
+```
+
 # Example
 
 The demo version available at [http://softmonkeyjapan.github.io/angular-google-picker/](http://softmonkeyjapan.github.io/angular-google-picker/) can be found in the `example` folder.

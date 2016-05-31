@@ -13,6 +13,7 @@
   .provider('lkGoogleSettings', function () {
     this.apiKey   = null;
     this.clientId = null;
+    this.developerKey = null;
     this.scopes   = ['https://www.googleapis.com/auth/drive'];
     this.features = ['MULTISELECT_ENABLED'];
     this.views    = [
@@ -27,13 +28,14 @@
      */
     this.$get = ['$window', function ($window) {
       return {
-        apiKey   : this.apiKey,
-        clientId : this.clientId,
-        scopes   : this.scopes,
-        features : this.features,
-        views    : this.views,
-        locale   : this.locale,
-        origin   : this.origin || $window.location.protocol + '//' + $window.location.host
+        apiKey       : this.apiKey,
+        clientId     : this.clientId,
+        developerKey : this.developerKey,
+        scopes       : this.scopes,
+        features     : this.features,
+        views        : this.views,
+        locale       : this.locale,
+        origin       : this.origin || $window.location.protocol + '//' + $window.location.host
       }
     }];
 
@@ -53,7 +55,8 @@
       scope: {
         onLoaded: '&',
         onCancel: '&',
-        onPicked: '&'
+        onPicked: '&',
+        accessToken: '@'
       },
       link: function (scope, element, attrs) {
         var accessToken = null;
@@ -62,7 +65,13 @@
          * Load required modules
          */
         function instanciate () {
-          gapi.load('auth', { 'callback': onApiAuthLoad });
+          if (!scope.accessToken) {
+            gapi.load('auth', { 'callback': onApiAuthLoad });
+          } else if (scope.accessToken && lkGoogleSettings.developerKey) {
+            onApiAuthLoad();
+          } else {
+            throw "You need a developerKey in the configuration to use the accessToken directive";
+          }
           gapi.load('picker');
         }
 
@@ -71,7 +80,12 @@
          * If user is already logged in, then open the Picker modal
          */
         function onApiAuthLoad () {
-          var authToken = gapi.auth.getToken();
+          if (!scope.accessToken) {
+            var authToken = gapi.auth.getToken();
+          } else {
+            var authToken = {};
+            authToken.access_token = scope.accessToken;
+          }
 
           if (authToken) {
             handleAuthResult(authToken);
@@ -103,6 +117,12 @@
                                  .setOAuthToken(accessToken)
                                  .setCallback(pickerResponse)
                                  .setOrigin(lkGoogleSettings.origin);
+
+          if (lkGoogleSettings.developerKey) {
+            console.log(lkGoogleSettings.developerKey);
+            console.log(accessToken);
+            picker.setDeveloperKey(lkGoogleSettings.developerKey);
+          }
 
           if (lkGoogleSettings.features.length > 0) {
             angular.forEach(lkGoogleSettings.features, function (feature, key) {
